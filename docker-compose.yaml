@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  db:
+    container_name: exchanger-db
+    image: postgres:17.0-alpine3.20
+    networks:
+      - backend
+    environment:
+      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./scripts/db_init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7.4.0-alpine
+    container_name: exchanger-redis
+    ports:
+      - "6379:6379"
+    command: "redis-server --save 60 1 --loglevel warning" # persist data to VOLUME /data
+
+  redis-commander:
+    container_name: exchanger-redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+
+volumes:
+  db-data:
+
+networks:
+  backend:
+    driver: bridge
