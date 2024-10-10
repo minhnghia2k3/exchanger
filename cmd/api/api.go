@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/minhnghia2k3/CoinScraper/internal/store"
+	"github.com/minhnghia2k3/exchanger/internal/store"
 	"log"
 	"net/http"
 	"time"

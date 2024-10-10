@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("record not found")
+	ErrNotFound = errors.New("not found record")
 )
 
 var (

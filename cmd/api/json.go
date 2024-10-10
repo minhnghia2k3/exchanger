@@ -29,10 +29,11 @@ func writeJSONError(w http.ResponseWriter, status int, msg string) error {
 	return writeJSON(w, status, envelop{"error": msg})
 }
 
-func (app *application) readJSON(w http.ResponseWriter, r *http.Request, value any) {
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, value any) error {
 	decoder := json.NewDecoder(r.Body)
 
 	if err := decoder.Decode(value); err != nil {
-		app.internalServerError(w, r, err)
+		return err
 	}
+	return nil
 }

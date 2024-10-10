@@ -9,7 +9,7 @@ import (
 
 type ICurrencies interface {
 	Get(ctx context.Context, id int64) (*Currency, error)
-	List(ctx context.Context, code, name string, filter Filter) ([]Currency, Metadata, error)
+	List(ctx context.Context, filter Filter) ([]Currency, Metadata, error)
 	Insert(ctx context.Context, currency *Currency) error
 	Update(ctx context.Context, id int64, currency *Currency) error
 	Delete(ctx context.Context, id int64) error
@@ -44,7 +44,7 @@ func (m *CurrencyModel) Get(ctx context.Context, id int64) (*Currency, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, ErrNotFound
+			return nil, fmt.Errorf("%w by id %d", ErrNotFound, id)
 		default:
 			return nil, err
 		}
@@ -52,21 +52,20 @@ func (m *CurrencyModel) Get(ctx context.Context, id int64) (*Currency, error) {
 
 	return &currency, nil
 }
-func (m *CurrencyModel) List(ctx context.Context, code, name string, filter Filter) ([]Currency, Metadata, error) {
+func (m *CurrencyModel) List(ctx context.Context, filter Filter) ([]Currency, Metadata, error) {
 	var currencies []Currency
 	var totalRecord int
 
 	query := fmt.Sprintf(`SELECT COUNT(*) OVER(), id, code, name, symbol_url FROM currencies
-	WHERE (to_tsvector('simple', name) @@ to_tsquery('simple', $1) OR $1 = '') OR (code = $2 OR $2 = '')
+	WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) 
+	   OR code = $1 OR $1 = '')
 	ORDER BY %s %s, id ASC
-    LIMIT $3 OFFSET $4`, filter.sortColumn(), filter.sortDirection())
-
-	fmt.Println("query:", query)
+    LIMIT $2 OFFSET $3`, filter.sortColumn(), filter.sortDirection())
 
 	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
 	defer cancel()
 
-	args := []any{code, name, filter.limit(), filter.calculateOffset()}
+	args := []any{filter.Search, filter.limit(), filter.calculateOffset()}
 
 	rows, err := m.db.QueryContext(ctx, query, args...)
 	if err != nil {

@@ -1,0 +1,177 @@
+definitions:
+  main.AddCurrencyInput:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      symbol_url:
+        type: string
+    required:
+    - code
+    - name
+    type: object
+  main.UpdateCurrencyInput:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      symbol_url:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /currencies:
+    get:
+      consumes:
+      - application/json
+      description: get all currencies
+      parameters:
+      - description: Current page
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort
+        in: query
+        name: sort
+        type: integer
+      - description: Search
+        in: query
+        name: search
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: List currencies
+      tags:
+      - currencies
+    patch:
+      consumes:
+      - application/json
+      description: update currency by id
+      parameters:
+      - description: currency ID
+        in: path
+        name: currencyID
+        required: true
+        type: integer
+      - description: Update currency payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateCurrencyInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Update currency
+      tags:
+      - currencies
+    post:
+      consumes:
+      - application/json
+      description: add currency detail
+      parameters:
+      - description: Add currency
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.AddCurrencyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Add currency
+      tags:
+      - currencies
+  /currencies/{currencyID}:
+    delete:
+      consumes:
+      - application/json
+      description: delete currency by id
+      parameters:
+      - description: currency ID
+        in: path
+        name: currencyID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Delete currency
+      tags:
+      - currencies
+    get:
+      consumes:
+      - application/json
+      description: get currency by id
+      parameters:
+      - description: Currency ID
+        in: path
+        name: currencyID
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Get currency
+      tags:
+      - currencies
+swagger: "2.0"

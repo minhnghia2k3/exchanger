@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 )
 
 func readInt(r *http.Request, key string, fallback int) int {
-	val := chi.URLParam(r, key)
+	val := r.URL.Query().Get(key)
 
 	if val == "" {
 		return fallback
@@ -22,7 +21,7 @@ func readInt(r *http.Request, key string, fallback int) int {
 }
 
 func readString(r *http.Request, key string, fallback string) string {
-	val := chi.URLParam(r, key)
+	val := r.URL.Query().Get(key)
 
 	if val == "" {
 		return fallback

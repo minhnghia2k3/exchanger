@@ -20,4 +20,7 @@ migrate.down:
 migrate.force:
 	@migrate -path $(MIGRATION_PATH) -database $(DATABASE_URL) force $(VERSION)
 
-PHONY: docker.up docker.down migrate migrate.up migrate.down
+swag:
+	@swag init -d ./cmd/api fmt --exclude docs,scripts
+
+PHONY: docker.up docker.down migrate migrate.up migrate.down swag

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/minhnghia2k3/CoinScraper/internal/env"
-	"github.com/minhnghia2k3/CoinScraper/internal/store"
+	"github.com/minhnghia2k3/exchanger/internal/env"
+	"github.com/minhnghia2k3/exchanger/internal/store"
 	"log"
 )
 

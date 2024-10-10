@@ -10,6 +10,7 @@ type Filter struct {
 	PageSize     int      `json:"pageSize,omitempty" validate:"omitempty,min=1"`
 	Sort         string   `json:"sort,omitempty" validate:"omitempty"`
 	SortSafeList []string `json:"sort_safe_list,omitempty"`
+	Search       string   `json:"search,omitempty" validate:"omitempty"`
 }
 
 type Metadata struct {
@@ -22,14 +23,15 @@ type Metadata struct {
 
 // Check if client provided sort column is in sortSafeList
 func (f *Filter) sortColumn() string {
+	val := strings.TrimPrefix(f.Sort, "-")
 	for _, safeValue := range f.SortSafeList {
-		if f.Sort == safeValue {
-			return strings.TrimPrefix(f.Sort, "-")
+		if val == safeValue {
+			return val
 		}
 	}
 
-	// Help prevent SQL injection.
-	panic("unsafe sort parameter: " + f.Sort)
+	// If user provided unsafe value => return id as default
+	return "id"
 }
 
 // Return sort direction ("ASC", "DESC") depend on provided prefix
