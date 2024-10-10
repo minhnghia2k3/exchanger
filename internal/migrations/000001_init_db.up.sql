@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS currencies
     id      SERIAL PRIMARY KEY NOT NULL,
     code    VARCHAR(3) UNIQUE  NOT NULL,
     name    VARCHAR(50),
-    iconURL text
+    symbol_url text
 );
 
 CREATE UNIQUE INDEX currencies_code_idx ON currencies (code);
@@ -35,8 +35,8 @@ CREATE UNIQUE INDEX currencies_code_idx ON currencies (code);
 CREATE TABLE IF NOT EXISTS exchange_rates
 (
     id                 SERIAL PRIMARY KEY NOT NULL,
-    base_currency_id   INT                NOT NULL REFERENCES currencies (id),
-    target_currency_id INT                NOT NULL REFERENCES currencies (id),
+    base_currency_id   INT                NOT NULL REFERENCES currencies (id) ON DELETE CASCADE,
+    target_currency_id INT                NOT NULL REFERENCES currencies (id) ON DELETE CASCADE,
     rate               DECIMAL(18, 8)     NOT NULL,
     last_update        TIMESTAMP          NOT NULL,
     next_update        TIMESTAMP          NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS exchange_rates
 CREATE TABLE IF NOT EXISTS transactions
 (
     id                 SERIAL PRIMARY KEY NOT NULL,
-    user_id            INT                NOT NULL REFERENCES users (id),
+    user_id            INT                NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     base_currency_id   INT                NOT NULL REFERENCES currencies (id),
     target_currency_id INT                NOT NULL REFERENCES currencies (id),
     amount             DECIMAL(18, 8)     NOT NULL,

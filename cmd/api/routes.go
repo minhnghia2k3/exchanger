@@ -27,15 +27,16 @@ func (app *application) routes() http.Handler {
 		//	})
 		//})
 		//
-		//r.Route("/currencies", func(r chi.Router) {
-		//	r.Get("/", app.listCurrenciesHandler)
-		//	r.Post("/", app.addCurrencyHandler)
-		//	r.Route("/{currencyID}", func(r chi.Router) {
-		//		r.Get("/", app.getCurrencyHandler)
-		//		r.Patch("/", app.updateCurrencyHandler)
-		//		r.Delete("/", app.deleteCurrencyHandler)
-		//	})
-		//})
+		r.Route("/currencies", func(r chi.Router) {
+			r.Get("/", app.listCurrenciesHandler)
+			//r.Post("/", app.addCurrencyHandler)
+			//r.Route("/{currencyID}", func(r chi.Router) {
+			//	r.Get("/", app.getCurrencyHandler)
+			//	r.Patch("/", app.updateCurrencyHandler)
+			//	r.Delete("/", app.deleteCurrencyHandler)
+			//})
+		})
+		//
 		//
 		//r.Route("/rates", func(r chi.Router) {
 		//	r.Route("/{base}/{target}", func(r chi.Router) {

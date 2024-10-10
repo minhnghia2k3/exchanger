@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"github.com/minhnghia2k3/CoinScraper/internal/env"
-	"github.com/minhnghia2k3/CoinScraper/internal/model"
+	"github.com/minhnghia2k3/CoinScraper/internal/store"
 	"log"
 )
 
@@ -702,11 +702,11 @@ func main() {
 	}
 	defer db.Close()
 
-	models := model.NewModels(db)
+	storage := store.NewStorage(db)
 
 	app := application{
 		config: cfg,
-		models: models,
+		store:  storage,
 	}
 
 	log.Fatal(app.serve())

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/minhnghia2k3/CoinScraper/internal/model"
+	"github.com/minhnghia2k3/CoinScraper/internal/store"
 	"log"
 	"net/http"
 	"time"
@@ -10,7 +10,7 @@ import (
 
 type application struct {
 	config config
-	models *model.Models
+	store  *store.Storage
 }
 
 type config struct {
