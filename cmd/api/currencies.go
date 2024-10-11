@@ -25,10 +25,10 @@ type UpdateCurrencyInput struct {
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
-//	@Param			page	query		int	false	"Current page"
-//	@Param			page_size	query		int	false	"Page size"
-//	@Param			sort	query		int	false	"Sort"
-//	@Param			search	query		int	false	"Search"
+//	@Param			page		query	int		false	"Current page"
+//	@Param			page_size	query	int		false	"Page size"
+//	@Param			sort		query	string	false	"Sort"
+//	@Param			search		query	string	false	"Search"
 //	@Success		200
 //	@Failure		400	{object}	error
 //	@Failure		500	{object}	error
@@ -67,7 +67,7 @@ func (app *application) listCurrenciesHandler(w http.ResponseWriter, r *http.Req
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
-//	@Param			input	body		AddCurrencyInput	true	"Add currency"
+//	@Param			input	body	AddCurrencyInput	true	"Add currency"
 //	@Success		200
 //	@Failure		400	{object}	error
 //	@Failure		409	{object}	error
@@ -109,7 +109,7 @@ func (app *application) addCurrencyHandler(w http.ResponseWriter, r *http.Reques
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
-//	@Param			currencyID	path		int	false	"Currency ID"
+//	@Param			currencyID	path	int	false	"Currency ID"
 //	@Success		200
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error
@@ -130,13 +130,13 @@ func (app *application) getCurrencyHandler(w http.ResponseWriter, r *http.Reques
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
-//	@Param			currencyID	path		int	true	"currency ID"
-//	@Param input	body		UpdateCurrencyInput	true	"Update currency payload"
+//	@Param			currencyID	path	int					true	"currency ID"
+//	@Param			input		body	UpdateCurrencyInput	true	"Update currency payload"
 //	@Success		204
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error
 //	@Failure		500	{object}	error
-//	@Router			/currencies [patch]
+//	@Router			/currencies/{currencyID} [patch]
 func (app *application) updateCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	var input UpdateCurrencyInput
 	currency := r.Context().Value(currencyCtx).(*store.Currency)
@@ -173,7 +173,7 @@ func (app *application) updateCurrencyHandler(w http.ResponseWriter, r *http.Req
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
-//	@Param			currencyID	path		int	true	"currency ID"
+//	@Param			currencyID	path	int	true	"currency ID"
 //	@Success		204
 //	@Failure		400	{object}	error
 //	@Failure		409	{object}	error

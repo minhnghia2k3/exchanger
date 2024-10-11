@@ -113,6 +113,9 @@ func (m *CurrencyModel) Update(ctx context.Context, id int64, currency *Currency
 		defer cancel()
 
 		_, err := tx.ExecContext(ctx, query, currency.Code, currency.Name, currency.SymbolUrl, id)
+		if err != nil {
+			return err
+		}
 
 		if err != nil {
 			switch {
@@ -134,7 +137,7 @@ func (m *CurrencyModel) Delete(ctx context.Context, id int64) error {
 		ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
 		defer cancel()
 
-		_, err := m.db.ExecContext(ctx, query, id)
+		_, err := tx.ExecContext(ctx, query, id)
 
 		if err != nil {
 			switch {

@@ -40,11 +40,11 @@ paths:
       - description: Sort
         in: query
         name: sort
-        type: integer
+        type: string
       - description: Search
         in: query
         name: search
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -57,39 +57,6 @@ paths:
           description: Internal Server Error
           schema: {}
       summary: List currencies
-      tags:
-      - currencies
-    patch:
-      consumes:
-      - application/json
-      description: update currency by id
-      parameters:
-      - description: currency ID
-        in: path
-        name: currencyID
-        required: true
-        type: integer
-      - description: Update currency payload
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/main.UpdateCurrencyInput'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema: {}
-        "404":
-          description: Not Found
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      summary: Update currency
       tags:
       - currencies
     post:
@@ -172,6 +139,39 @@ paths:
           description: Internal Server Error
           schema: {}
       summary: Get currency
+      tags:
+      - currencies
+    patch:
+      consumes:
+      - application/json
+      description: update currency by id
+      parameters:
+      - description: currency ID
+        in: path
+        name: currencyID
+        required: true
+        type: integer
+      - description: Update currency payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateCurrencyInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Update currency
       tags:
       - currencies
 swagger: "2.0"
