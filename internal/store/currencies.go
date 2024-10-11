@@ -89,55 +89,63 @@ func (m *CurrencyModel) List(ctx context.Context, filter Filter) ([]Currency, Me
 	return currencies, metadata, nil
 }
 func (m *CurrencyModel) Insert(ctx context.Context, currency *Currency) error {
-	query := `INSERT INTO currencies(code, name, symbol_url) VALUES($1, $2, $3)`
+	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		query := `INSERT INTO currencies(code, name, symbol_url) VALUES($1, $2, $3)`
 
-	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+		defer cancel()
 
-	_, err := m.db.ExecContext(ctx, query, currency.Code, currency.Name, currency.SymbolUrl)
+		_, err := tx.ExecContext(ctx, query, currency.Code, currency.Name, currency.SymbolUrl)
 
-	if err != nil {
-		return err
-	}
+		if err != nil {
+			return err
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func (m *CurrencyModel) Update(ctx context.Context, id int64, currency *Currency) error {
-	query := `UPDATE currencies SET code = $1, name = $2, symbol_url = $3 WHERE id = $4`
+	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		query := `UPDATE currencies SET code = $1, name = $2, symbol_url = $3 WHERE id = $4`
 
-	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+		defer cancel()
 
-	_, err := m.db.ExecContext(ctx, query, currency.Code, currency.Name, currency.SymbolUrl, id)
+		_, err := tx.ExecContext(ctx, query, currency.Code, currency.Name, currency.SymbolUrl, id)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrNotFound
-		default:
-			return err
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return ErrNotFound
+			default:
+				return err
+			}
 		}
-	}
 
-	return nil
+		return nil
+	})
 }
+
 func (m *CurrencyModel) Delete(ctx context.Context, id int64) error {
-	query := `DELETE FROM currencies WHERE id = $1`
+	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		query := `DELETE FROM currencies WHERE id = $1`
 
-	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+		defer cancel()
 
-	_, err := m.db.ExecContext(ctx, query, id)
+		_, err := m.db.ExecContext(ctx, query, id)
 
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrNotFound
-		default:
-			return err
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return ErrNotFound
+			default:
+				return err
+			}
 		}
-	}
 
-	return nil
+		return nil
+	})
+
 }
