@@ -9,7 +9,10 @@ import (
 	"strconv"
 )
 
-const currencyCtx = "currency"
+const (
+	currencyCtx = "currency"
+	userCtx     = "user"
+)
 
 func (app *application) currencyContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +37,30 @@ func (app *application) currencyContext(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), currencyCtx, currency)
 
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) userContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+		if err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
+
+		user, err := app.store.Users.FindBy(r.Context(), "id", userID)
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrNotFound):
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userCtx, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

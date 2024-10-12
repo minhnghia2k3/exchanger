@@ -22,7 +22,7 @@ import (
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-//	@BasePath	/v1
+// @BasePath	/v1
 func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -41,16 +41,21 @@ func (app *application) routes() http.Handler {
 
 		r.Get("/healthcheck", app.healthcheckHandler)
 
-		//r.Route("/users", func(r chi.Router) {
-		//	r.Post("/", app.createUserHandler)
-		//
-		//	r.Route("/{userID}", func(r chi.Router) {
-		//		r.Get("/", app.getUserHandler)
-		//		r.Patch("/", app.updateUserHandler)
-		//		r.Delete("/", app.deleteUserHandler)
-		//	})
-		//})
-		//
+		r.Route("/authentications", func(r chi.Router) {
+			r.Post("/users", app.registerUserHandler)
+			r.Post("/tokens", app.createTokenHandler)
+		})
+
+		r.Route("/users", func(r chi.Router) {
+			r.Put("/activate/{token}", app.activateTokenHandler)
+
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Get("/", app.getUserHandler)
+				r.Patch("/", app.updateUserHandler)
+				r.Delete("/", app.deleteUserHandler)
+			})
+		})
+
 		r.Route("/currencies", func(r chi.Router) {
 			r.Get("/", app.listCurrenciesHandler)
 			r.Post("/", app.addCurrencyHandler)

@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrNotFound = errors.New("not found record")
+	ErrConflict = errors.New("record already exists")
 )
 
 var (
@@ -17,11 +18,13 @@ var (
 
 type Storage struct {
 	Currencies ICurrencies
+	Users      IUser
 }
 
 func NewStorage(db *sql.DB) *Storage {
 	return &Storage{
 		Currencies: &CurrencyModel{db: db},
+		Users:      &UserModel{db: db},
 	}
 }
 
