@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users
     username   VARCHAR(50) UNIQUE NOT NULL,
     email      citext UNIQUE      NOT NULL,
     password   bytea              NOT NULL,
+    activated  bool        default false,
     created_at timestamptz default now(),
     last_login timestamptz
 );
@@ -24,9 +25,9 @@ CREATE UNIQUE INDEX users_user_name_idx ON users (username);
 
 CREATE TABLE IF NOT EXISTS currencies
 (
-    id      SERIAL PRIMARY KEY NOT NULL,
-    code    VARCHAR(3) UNIQUE  NOT NULL,
-    name    VARCHAR(50),
+    id         SERIAL PRIMARY KEY NOT NULL,
+    code       VARCHAR(3) UNIQUE  NOT NULL,
+    name       VARCHAR(50),
     symbol_url text
 );
 

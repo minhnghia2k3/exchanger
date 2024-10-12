@@ -50,6 +50,8 @@ func (app *application) routes() http.Handler {
 			r.Put("/activate/{token}", app.activateTokenHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
+				r.Use(app.userContext)
+
 				r.Get("/", app.getUserHandler)
 				r.Patch("/", app.updateUserHandler)
 				r.Delete("/", app.deleteUserHandler)
