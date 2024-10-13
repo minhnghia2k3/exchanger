@@ -123,15 +123,15 @@ func (app *application) getCurrencyHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// Update currency
+// update currency
 //
-//	@Summary		Update currency
+//	@Summary		update currency
 //	@Description	update currency by id
 //	@Tags			currencies
 //	@Accept			json
 //	@Produce		json
 //	@Param			currencyID	path	int					true	"currency ID"
-//	@Param			input		body	UpdateCurrencyInput	true	"Update currency payload"
+//	@Param			input		body	UpdateCurrencyInput	true	"update currency payload"
 //	@Success		204
 //	@Failure		400	{object}	error
 //	@Failure		404	{object}	error

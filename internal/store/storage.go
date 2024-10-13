@@ -18,13 +18,13 @@ var (
 
 type Storage struct {
 	Currencies ICurrencies
-	Users      IUser
+	Users      IUsers
 }
 
 func NewStorage(db *sql.DB) *Storage {
 	return &Storage{
-		Currencies: &CurrencyModel{db: db},
-		Users:      &UserModel{db: db},
+		Currencies: &CurrencyStorage{db: db},
+		Users:      &UserStorage{db: db},
 	}
 }
 

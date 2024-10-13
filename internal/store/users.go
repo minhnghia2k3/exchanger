@@ -2,7 +2,9 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/lib/pq"
@@ -10,12 +12,13 @@ import (
 	"time"
 )
 
-type IUser interface {
+type IUsers interface {
 	FindBy(ctx context.Context, field string, value any) (*User, error)
 	Insert(ctx context.Context, user *User) error
 	CreateAndInvite(ctx context.Context, token string, user *User) error
-	Update(ctx context.Context, user *User) error
+	update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id int64) error
+	Activate(ctx context.Context, token string) error
 }
 
 type User struct {
@@ -37,7 +40,7 @@ type Role struct {
 	Description *string `json:"description"`
 }
 
-type UserModel struct {
+type UserStorage struct {
 	db *sql.DB
 }
 
@@ -46,7 +49,7 @@ type password struct {
 	hash  []byte
 }
 
-func (m *UserModel) FindBy(ctx context.Context, field string, value any) (*User, error) {
+func (m *UserStorage) FindBy(ctx context.Context, field string, value any) (*User, error) {
 	var user User
 
 	allowField := map[string]bool{
@@ -96,7 +99,7 @@ WHERE users.%s=$1`, field)
 	return &user, nil
 }
 
-func (m *UserModel) Insert(ctx context.Context, user *User) error {
+func (m *UserStorage) Insert(ctx context.Context, user *User) error {
 	query := `INSERT INTO users(role_id, username, email, password)
 VALUES($1, $2, $3, $4) RETURNING id, created_at, last_login`
 
@@ -119,45 +122,44 @@ VALUES($1, $2, $3, $4) RETURNING id, created_at, last_login`
 	return nil
 }
 
-func (m *UserModel) CreateAndInvite(ctx context.Context, token string, user *User) error {
+func (m *UserStorage) CreateAndInvite(ctx context.Context, token string, user *User) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		// Create new user
 		err := m.Insert(ctx, user)
 		if err != nil {
 			return err
 		}
 
-		// TODO: send user activation token to email
-		return nil
-	})
-}
-
-func (m *UserModel) Update(ctx context.Context, user *User) error {
-	return withTx(ctx, m.db, func(tx *sql.Tx) error {
-		query := `UPDATE users SET email = $1, username = $2, password = $3 WHERE id = $4`
-
-		ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
-		defer cancel()
-
-		args := []any{user.Email, user.Username, user.Password.hash, user.ID}
-
-		_, err := tx.ExecContext(ctx, query, args...)
-
-		if err != nil {
-			var pqErr *pq.Error
-			switch {
-			case errors.As(err, &pqErr):
-				return ErrConflict
-			case errors.Is(err, sql.ErrNoRows):
-				return ErrNotFound
-			default:
-				return err
-			}
+		// Store invitation token to database
+		expiryDuration := time.Now().Add(3 * 24 * time.Hour)
+		if err = m.createUserInvitation(ctx, user.ID, token, expiryDuration); err != nil {
+			return err
 		}
 
 		return nil
 	})
 }
-func (m *UserModel) Delete(ctx context.Context, id int64) error {
+
+func (m *UserStorage) update(ctx context.Context, user *User) error {
+	query := `UPDATE users SET activated = $1 WHERE id = $2`
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
+	defer cancel()
+
+	_, err := m.db.ExecContext(ctx, query, user.Activated, user.ID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+func (m *UserStorage) Delete(ctx context.Context, id int64) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `DELETE FROM users WHERE id = $1`
 		ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
@@ -171,6 +173,29 @@ func (m *UserModel) Delete(ctx context.Context, id int64) error {
 			default:
 				return err
 			}
+		}
+
+		return nil
+	})
+}
+
+func (m *UserStorage) Activate(ctx context.Context, token string) error {
+	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		// 1. get user by token
+		user, err := m.getUserByInvitation(ctx, token)
+		if err != nil {
+			return err
+		}
+
+		// 2. update activation status
+		user.Activated = true
+		if err = m.update(ctx, user); err != nil {
+			return err
+		}
+
+		// 3. Delete user invitations
+		if err = m.deleteUserInvitation(ctx, user.ID); err != nil {
+			return err
 		}
 
 		return nil
@@ -192,4 +217,64 @@ func (p *password) Set(plain string) error {
 
 func (p *password) Verify() error {
 	return bcrypt.CompareHashAndPassword(p.hash, []byte(p.plain))
+}
+
+func (m *UserStorage) getUserByInvitation(ctx context.Context, token string) (*User, error) {
+	var user User
+
+	query := `SELECT id, activated FROM users 
+    INNER JOIN user_invitations ON user_invitations.user_id = users.id
+	WHERE user_invitations.token = $1 AND user_invitations.expire_at > $2`
+
+	sum := sha256.Sum256([]byte(token))
+	hashedToken := hex.EncodeToString(sum[:])
+
+	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+	defer cancel()
+
+	err := m.db.QueryRowContext(ctx, query, hashedToken, time.Now()).Scan(&user.ID, &user.Activated)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
+func (m *UserStorage) createUserInvitation(ctx context.Context, userID int64, token string, expiry time.Time) error {
+	query := `INSERT INTO user_invitations(user_id, token, expire_at)
+	VALUES($1, $2, $3)`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+	defer cancel()
+
+	_, err := m.db.ExecContext(ctx, query, userID, token, expiry)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (m *UserStorage) deleteUserInvitation(ctx context.Context, userID int64) error {
+	return withTx(ctx, m.db, func(tx *sql.Tx) error {
+		query := `DELETE FROM user_invitations WHERE user_id = $1`
+
+		ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+		defer cancel()
+
+		_, err := tx.ExecContext(ctx, query, userID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

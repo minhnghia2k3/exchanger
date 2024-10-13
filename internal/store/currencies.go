@@ -22,11 +22,11 @@ type Currency struct {
 	SymbolUrl *string `json:"symbol_url"`
 }
 
-type CurrencyModel struct {
+type CurrencyStorage struct {
 	db *sql.DB
 }
 
-func (m *CurrencyModel) Get(ctx context.Context, id int64) (*Currency, error) {
+func (m *CurrencyStorage) Get(ctx context.Context, id int64) (*Currency, error) {
 	query := `SELECT id, code, name, symbol_url FROM currencies WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
@@ -52,7 +52,7 @@ func (m *CurrencyModel) Get(ctx context.Context, id int64) (*Currency, error) {
 
 	return &currency, nil
 }
-func (m *CurrencyModel) List(ctx context.Context, filter Filter) ([]Currency, Metadata, error) {
+func (m *CurrencyStorage) List(ctx context.Context, filter Filter) ([]Currency, Metadata, error) {
 	var currencies []Currency
 	var totalRecord int
 
@@ -88,7 +88,7 @@ func (m *CurrencyModel) List(ctx context.Context, filter Filter) ([]Currency, Me
 
 	return currencies, metadata, nil
 }
-func (m *CurrencyModel) Insert(ctx context.Context, currency *Currency) error {
+func (m *CurrencyStorage) Insert(ctx context.Context, currency *Currency) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `INSERT INTO currencies(code, name, symbol_url) VALUES($1, $2, $3)`
 
@@ -105,7 +105,7 @@ func (m *CurrencyModel) Insert(ctx context.Context, currency *Currency) error {
 	})
 }
 
-func (m *CurrencyModel) Update(ctx context.Context, id int64, currency *Currency) error {
+func (m *CurrencyStorage) Update(ctx context.Context, id int64, currency *Currency) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `UPDATE currencies SET code = $1, name = $2, symbol_url = $3 WHERE id = $4`
 
@@ -130,7 +130,7 @@ func (m *CurrencyModel) Update(ctx context.Context, id int64, currency *Currency
 	})
 }
 
-func (m *CurrencyModel) Delete(ctx context.Context, id int64) error {
+func (m *CurrencyStorage) Delete(ctx context.Context, id int64) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `DELETE FROM currencies WHERE id = $1`
 

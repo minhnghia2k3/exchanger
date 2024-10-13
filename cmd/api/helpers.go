@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"strconv"
 )
@@ -28,4 +30,10 @@ func readString(r *http.Request, key string, fallback string) string {
 	}
 
 	return val
+}
+
+func SHA256Hash(text string) string {
+	h := sha256.Sum256([]byte(text))
+
+	return hex.EncodeToString(h[:])
 }

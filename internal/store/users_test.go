@@ -17,7 +17,7 @@ func TestUserModel_FindBy(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := UserModel{db}
+	model := UserStorage{db}
 
 	// Define table-driven test cases
 	tests := []struct {
@@ -124,7 +124,7 @@ func TestUserModel_Insert(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := UserModel{db}
+	model := UserStorage{db}
 
 	// Define the user data
 	user := &User{
@@ -200,7 +200,7 @@ func TestUserModel_Update(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := UserModel{db}
+	model := UserStorage{db}
 
 	// Define table-driven test cases
 	tests := []struct {
@@ -210,7 +210,7 @@ func TestUserModel_Update(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name: "Successful Update",
+			name: "Successful update",
 			user: &User{
 				ID:       1,
 				Email:    "newemail@example.com",
@@ -269,7 +269,7 @@ func TestUserModel_Update(t *testing.T) {
 			tc.mockBehavior()
 
 			// Call the update method
-			err = model.Update(context.Background(), tc.user)
+			err = model.update(context.Background(), tc.user)
 
 			// Assert that the error matches the expected error
 			assert.ErrorIs(t, err, tc.expectedError)
@@ -286,7 +286,7 @@ func TestUserModel_Delete(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := UserModel{db}
+	model := UserStorage{db}
 
 	// Define table-driven test cases
 	tests := []struct {

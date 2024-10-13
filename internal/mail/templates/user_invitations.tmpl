@@ -1,0 +1,30 @@
+{{define "subject"}}Activate your Exchanger account{{end}}
+{{define "plainBody"}}
+Hi,
+Please send a `PUT /v1/users/activated` request with the following JSON body to activate your account:
+{"token": "{{.activationToken}}"}
+Please note that this is a one-time use token and it will expire in 3 days.
+Thanks,
+The Exchanger Team
+{{end}}
+{{define "htmlBody"}}
+<!doctype html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Activate your Exchanger account</title>
+</head>
+<body>
+<p>Hi,</p>
+<p>Please send a <code>PUT /v1/users/activated</code> request with the following JSON body to activate your account:</p>
+<pre><code>
+{"token": "{{.activationToken}}"}
+</code></pre>
+<p>Please note that this is a one-time use token and it will expire in 3 days.</p>
+<p>Thanks,</p>
+<p>The Exchanger Team</p>
+</body>
+</html>
+{{end}}

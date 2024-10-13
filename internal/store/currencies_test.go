@@ -15,7 +15,7 @@ func TestGetCurrency(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	testCases := []struct {
 		name          string
@@ -85,8 +85,8 @@ func TestCurrencyModel_List(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	// Initialize CurrencyModel with mock db
-	model := CurrencyModel{db: db}
+	// Initialize CurrencyStorage with mock db
+	model := CurrencyStorage{db: db}
 
 	// Define test cases
 	tests := []struct {
@@ -194,7 +194,7 @@ func TestInsertCurrency(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	// Define the currency you want to insert
 	currency := &Currency{
@@ -224,7 +224,7 @@ func TestUpdateCurrency(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	// Define the currency you want to update
 	currency := &Currency{
@@ -259,7 +259,7 @@ func TestUpdateCurrencyNotFound(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	// Define the currency to update
 	currency := &Currency{
@@ -294,7 +294,7 @@ func TestDeleteCurrency(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	id := int64(1)
 
@@ -322,7 +322,7 @@ func TestDeleteCurrencyNotFound(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	model := CurrencyModel{db}
+	model := CurrencyStorage{db}
 
 	id := int64(1)
 

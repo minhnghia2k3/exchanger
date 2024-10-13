@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/minhnghia2k3/exchanger/internal/mail"
 	"github.com/minhnghia2k3/exchanger/internal/store"
 	"log"
 	"net/http"
@@ -11,12 +12,14 @@ import (
 type application struct {
 	config config
 	store  *store.Storage
+	mailer *mail.Mailer
 }
 
 type config struct {
-	port     int
-	env      string
-	dbConfig dbConfig
+	port       int
+	env        string
+	dbConfig   dbConfig
+	mailConfig mailConfig
 }
 
 type dbConfig struct {
@@ -24,6 +27,14 @@ type dbConfig struct {
 	maxIdleConn int
 	maxOpenConn int
 	maxIdleTime string
+}
+
+type mailConfig struct {
+	sender   string
+	host     string
+	port     int
+	username string
+	password string
 }
 
 func (app *application) serve() error {

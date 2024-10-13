@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/joho/godotenv"
 	"github.com/minhnghia2k3/exchanger/internal/env"
+	"github.com/minhnghia2k3/exchanger/internal/mail"
 	"github.com/minhnghia2k3/exchanger/internal/store"
 	"log"
 )
@@ -694,6 +695,13 @@ func main() {
 			maxOpenConn: env.GetInt("MAX_OPEN_CONN", 25),
 			maxIdleTime: env.GetString("MAX_IDLE_TIME", "15m"),
 		},
+		mailConfig: mailConfig{
+			sender:   env.GetString("MAIL_SENDER", "Exchanger"),
+			host:     env.GetString("MAIL_HOST", ""),
+			port:     env.GetInt("MAIL_PORT", 25),
+			username: env.GetString("MAIL_USERNAME", ""),
+			password: env.GetString("MAIL_PASSWORD", ""),
+		},
 	}
 
 	db, err := connectDB(cfg.dbConfig)
@@ -702,11 +710,20 @@ func main() {
 	}
 	defer db.Close()
 
+	mailer := mail.NewMailer(
+		cfg.mailConfig.sender,
+		cfg.mailConfig.host,
+		cfg.mailConfig.port,
+		cfg.mailConfig.username,
+		cfg.mailConfig.password,
+	)
+
 	storage := store.NewStorage(db)
 
 	app := application{
 		config: cfg,
 		store:  storage,
+		mailer: mailer,
 	}
 
 	log.Fatal(app.serve())

@@ -26,6 +26,7 @@ import (
 func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
+	// TODO: HANDLE NOT FOUND ROUTES, METHOD NOT ALLOW
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
@@ -41,19 +42,18 @@ func (app *application) routes() http.Handler {
 
 		r.Get("/healthcheck", app.healthcheckHandler)
 
-		r.Route("/authentications", func(r chi.Router) {
-			r.Post("/users", app.registerUserHandler)
-			r.Post("/tokens", app.createTokenHandler)
+		r.Route("/tokens", func(r chi.Router) {
+			//r.Post("/authentication", app.createTokenHandler)
+			r.Put("/activate", app.activateTokenHandler)
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			r.Put("/activate/{token}", app.activateTokenHandler)
+			r.Post("/", app.registerUserHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.userContext)
 
 				r.Get("/", app.getUserHandler)
-				r.Patch("/", app.updateUserHandler)
 				r.Delete("/", app.deleteUserHandler)
 			})
 		})

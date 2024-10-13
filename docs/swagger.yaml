@@ -1,4 +1,9 @@
 definitions:
+  main.ActivationUserInvitations:
+    properties:
+      token:
+        type: string
+    type: object
   main.AddCurrencyInput:
     properties:
       code:
@@ -35,19 +40,6 @@ definitions:
       name:
         type: string
       symbol_url:
-        type: string
-    type: object
-  main.UpdateUserPayload:
-    properties:
-      email:
-        type: string
-      password:
-        maxLength: 72
-        minLength: 8
-        type: string
-      username:
-        maxLength: 50
-        minLength: 3
         type: string
     type: object
   main.UserWithToken:
@@ -104,40 +96,6 @@ definitions:
 info:
   contact: {}
 paths:
-  /authentications/users:
-    post:
-      consumes:
-      - application/json
-      description: register user
-      parameters:
-      - description: Register user payload
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/main.RegisterUserPayload'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/main.UserWithToken'
-        "400":
-          description: Bad Request
-          schema: {}
-        "404":
-          description: Not Found
-          schema: {}
-        "409":
-          description: Conflict
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      summary: Register user
-      tags:
-      - authentications
   /currencies:
     get:
       consumes:
@@ -266,7 +224,7 @@ paths:
         name: currencyID
         required: true
         type: integer
-      - description: Update currency payload
+      - description: update currency payload
         in: body
         name: input
         required: true
@@ -286,9 +244,72 @@ paths:
         "500":
           description: Internal Server Error
           schema: {}
-      summary: Update currency
+      summary: update currency
       tags:
       - currencies
+  /tokens/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activate user by invitation token
+      parameters:
+      - description: Invitation token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.ActivationUserInvitations'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Activate user account
+      tags:
+      - tokens
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: register user
+      parameters:
+      - description: Register user payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.RegisterUserPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.UserWithToken'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Register user
+      tags:
+      - users
   /users/{userID}:
     delete:
       consumes:
@@ -344,41 +365,6 @@ paths:
           description: Internal Server Error
           schema: {}
       summary: Get user
-      tags:
-      - users
-    patch:
-      consumes:
-      - application/json
-      description: update user by id
-      parameters:
-      - description: user ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      - description: Update user payload
-        in: body
-        name: input
-        required: true
-        schema:
-          $ref: '#/definitions/main.UpdateUserPayload'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/store.User'
-        "400":
-          description: Bad Request
-          schema: {}
-        "404":
-          description: Not Found
-          schema: {}
-        "500":
-          description: Internal Server Error
-          schema: {}
-      summary: Update user
       tags:
       - users
 swagger: "2.0"
