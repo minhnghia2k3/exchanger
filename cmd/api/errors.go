@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-var (
-	ErrInternalServerError = "internal server error"
-)
-
 func (app *application) internalServerError(w http.ResponseWriter, r *http.Request, err error) {
 	log.Printf("[%s] %s\tInternal server error: %v\n", r.Method, r.URL.String(), err.Error())
 	msg := "server encountered an error"
@@ -23,13 +19,17 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("[%s] %s\tNot found", r.Method, r.URL.String())
+	log.Printf("[%s] %s\tNot found\n", r.Method, r.URL.String())
 
 	writeJSONError(w, http.StatusNotFound, err.Error())
 }
 
 func (app *application) conflictErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	log.Printf("[%s] %s\tConflict", r.Method, r.URL.String())
+	log.Printf("[%s] %s\tConflict\n", r.Method, r.URL.String())
 
 	writeJSONError(w, http.StatusConflict, err.Error())
+}
+
+func (app *application) unauthorizedResponse(w http.ResponseWriter, r *http.Request, err error) {
+	writeJSONError(w, http.StatusUnauthorized, err.Error())
 }

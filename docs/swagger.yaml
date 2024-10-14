@@ -1,3 +1,4 @@
+basePath: /v1
 definitions:
   main.ActivationUserInvitations:
     properties:
@@ -15,6 +16,18 @@ definitions:
     required:
     - code
     - name
+    type: object
+  main.LoginPayload:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 72
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
     type: object
   main.RegisterUserPayload:
     properties:
@@ -63,6 +76,9 @@ definitions:
       username:
         type: string
     type: object
+  main.envelop:
+    additionalProperties: {}
+    type: object
   store.Role:
     properties:
       description:
@@ -94,7 +110,17 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Exchanger Open API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Exchanger API
+  version: "1.0"
 paths:
   /currencies:
     get:
@@ -276,6 +302,37 @@ paths:
       summary: Activate user account
       tags:
       - tokens
+  /tokens/authentication:
+    post:
+      consumes:
+      - application/json
+      description: login user account and generate access token
+      parameters:
+      - description: Login payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.LoginPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.envelop'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Login user account
+      tags:
+      - tokens
   /users:
     post:
       consumes:
@@ -364,7 +421,14 @@ paths:
         "500":
           description: Internal Server Error
           schema: {}
+      security:
+      - ApiKeyAuth: []
       summary: Get user
       tags:
       - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

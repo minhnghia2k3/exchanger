@@ -20,6 +20,13 @@ type config struct {
 	env        string
 	dbConfig   dbConfig
 	mailConfig mailConfig
+	jwtConfig  jwtConfig
+}
+
+type jwtConfig struct {
+	issuer string
+	secret string
+	expiry string
 }
 
 type dbConfig struct {

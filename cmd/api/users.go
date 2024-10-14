@@ -9,12 +9,6 @@ import (
 	"time"
 )
 
-type UpdateUserPayload struct {
-	Username string  `json:"username" validate:"omitempty,min=3,lte=50"`
-	Email    string  `json:"email" validate:"omitempty,email"`
-	Password *string `json:"password" validate:"omitempty,min=8,lte=72"`
-}
-
 type RegisterUserPayload struct {
 	Username string `json:"username" validate:"required,min=3,lte=50"`
 	Email    string `json:"email" validate:"required,email"`
@@ -66,6 +60,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Generate invite activation token
 	plainToken := uuid.Must(uuid.NewRandom()).String() // Return to user
 
 	token := SHA256Hash(plainToken) // Store to the database
@@ -110,14 +105,15 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path		int	true	"currency ID"
-//	@Success		200		{object}	store.User
-//	@Failure		400		{object}	error
-//	@Failure		404		{object}	error
-//	@Failure		500		{object}	error
+//	@Param			userID	path	int	true	"currency ID"
+//	@Security		ApiKeyAuth
+//	@Success		200	{object}	store.User
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
 //	@Router			/users/{userID} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userCtx).(*store.User)
+	user := r.Context().Value(foundUserCtx).(*store.User)
 
 	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
 		app.internalServerError(w, r, err)
@@ -138,7 +134,7 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{object}	error
 //	@Router			/users/{userID} [delete]
 func (app *application) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(userCtx).(*store.User)
+	user := r.Context().Value(foundUserCtx).(*store.User)
 
 	if err := app.store.Users.Delete(r.Context(), user.ID); err != nil {
 		switch {

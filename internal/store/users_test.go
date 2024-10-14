@@ -94,7 +94,7 @@ func TestUserModel_FindBy(t *testing.T) {
 			// Set up mock behavior for the current test case
 			tc.mockBehavior()
 
-			// Call the FindBy method
+			// Call the GetByID method
 			user, err := model.FindBy(context.Background(), tc.field, tc.value)
 
 			// Assert that the error matches the expected error
@@ -145,7 +145,7 @@ func TestUserModel_Insert(t *testing.T) {
 		{
 			name: "Success - User Created",
 			mockQuery: func() {
-				// Mock the "FindBy" function call (no existing user found)
+				// Mock the "GetByID" function call (no existing user found)
 				mock.ExpectQuery(`SELECT users.id, role_id, username, email, created_at, last_login FROM users`).
 					WithArgs(user.Email).
 					WillReturnError(sql.ErrNoRows)
@@ -160,7 +160,7 @@ func TestUserModel_Insert(t *testing.T) {
 		{
 			name: "Error - User Already Exists (Conflict)",
 			mockQuery: func() {
-				// Mock the "FindBy" function call (existing user found)
+				// Mock the "GetByID" function call (existing user found)
 				mock.ExpectQuery(`SELECT users.id, role_id, username, email, created_at, last_login FROM users`).
 					WithArgs(user.Email).
 					WillReturnRows(sqlmock.NewRows([]string{"id", "role_id", "username", "email"}).
@@ -177,8 +177,8 @@ func TestUserModel_Insert(t *testing.T) {
 			// Set up the mock expectations
 			tc.mockQuery()
 
-			// Call the Insert function
-			err = model.Insert(context.Background(), user)
+			// Call the create function
+			err = model.create(context.Background(), user)
 
 			// Assert the expected error
 			if tc.wantError != nil {

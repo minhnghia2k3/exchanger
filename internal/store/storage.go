@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("not found record")
-	ErrConflict = errors.New("record already exists")
+	ErrNotFound     = errors.New("not found record")
+	ErrConflict     = errors.New("record already exists")
+	ErrUnauthorized = errors.New("invalid credentials")
 )
 
 var (

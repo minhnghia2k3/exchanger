@@ -685,6 +685,23 @@ func init() {
 	}
 }
 
+//	@title			Exchanger API
+//	@version		1.0
+//	@description	Exchanger Open API
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@BasePath	/v1
+
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
 func main() {
 	cfg := config{
 		port: env.GetInt("PORT", 8080),
@@ -701,6 +718,11 @@ func main() {
 			port:     env.GetInt("MAIL_PORT", 25),
 			username: env.GetString("MAIL_USERNAME", ""),
 			password: env.GetString("MAIL_PASSWORD", ""),
+		},
+		jwtConfig: jwtConfig{
+			issuer: env.GetString("JWT_ISSUER", "Exchanger"),
+			secret: env.GetString("JWT_SECRET", "suP3rS3rcretK4y"),
+			expiry: env.GetString("JWT_EXPIRY", "24h"),
 		},
 	}
 

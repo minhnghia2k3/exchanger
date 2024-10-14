@@ -10,19 +10,6 @@ import (
 	"net/http"
 )
 
-//	@title			Exchanger API
-//	@version		1.0
-//	@description	Exchanger Open API
-//	@termsOfService	http://swagger.io/terms/
-
-//	@contact.name	API Support
-//	@contact.url	http://www.swagger.io/support
-//	@contact.email	support@swagger.io
-
-//	@license.name	Apache 2.0
-//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @BasePath	/v1
 func (app *application) routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -43,7 +30,7 @@ func (app *application) routes() http.Handler {
 		r.Get("/healthcheck", app.healthcheckHandler)
 
 		r.Route("/tokens", func(r chi.Router) {
-			//r.Post("/authentication", app.createTokenHandler)
+			r.Post("/authentication", app.createTokenHandler)
 			r.Put("/activate", app.activateTokenHandler)
 		})
 
@@ -51,7 +38,7 @@ func (app *application) routes() http.Handler {
 			r.Post("/", app.registerUserHandler)
 
 			r.Route("/{userID}", func(r chi.Router) {
-				r.Use(app.userContext)
+				r.Use(app.validateAccessToken, app.findUserContext)
 
 				r.Get("/", app.getUserHandler)
 				r.Delete("/", app.deleteUserHandler)

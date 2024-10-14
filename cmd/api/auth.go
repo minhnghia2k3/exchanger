@@ -6,8 +6,58 @@ import (
 	"net/http"
 )
 
-func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Request) {
+type LoginPayload struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=72"`
+}
 
+// Login account
+//
+//	@Summary		Login user account
+//	@Description	login user account and generate access token
+//	@Tags			tokens
+//	@Accept			json
+//	@Produce		json
+//	@Param			input	body		LoginPayload	true	"Login payload"
+//	@Success		201		{object}	envelop
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/tokens/authentication [post]
+func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var payload LoginPayload
+
+	if err := app.readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	user, err := app.store.Users.Login(r.Context(), payload.Email, payload.Password)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrUnauthorized):
+			app.unauthorizedResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	// Generate jwt token
+	tokenString, err := app.generateToken(user.ID, user.Email)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err = app.jsonResponse(w, http.StatusCreated, tokenString); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 type ActivationUserInvitations struct {

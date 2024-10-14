@@ -6,19 +6,18 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"time"
 )
 
 type IUsers interface {
-	FindBy(ctx context.Context, field string, value any) (*User, error)
-	Insert(ctx context.Context, user *User) error
+	GetByID(ctx context.Context, id int64) (*User, error)
 	CreateAndInvite(ctx context.Context, token string, user *User) error
-	update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id int64) error
 	Activate(ctx context.Context, token string) error
+	Login(ctx context.Context, email, password string) (*User, error)
 }
 
 type User struct {
@@ -49,30 +48,19 @@ type password struct {
 	hash  []byte
 }
 
-func (m *UserStorage) FindBy(ctx context.Context, field string, value any) (*User, error) {
+func (m *UserStorage) GetByID(ctx context.Context, id int64) (*User, error) {
 	var user User
 
-	allowField := map[string]bool{
-		"id":       true,
-		"role_id":  true,
-		"username": true,
-		"email":    true,
-	}
-
-	if !allowField[field] {
-		return nil, errors.New("field not allowed")
-	}
-
-	query := fmt.Sprintf(`SELECT users.id, role_id, username, email, password, created_at, last_login, activated, roles.*
-FROM users INNER JOIN roles ON role_id = roles.id
-WHERE users.%s=$1`, field)
+	query := `SELECT users.id, role_id, username, email, password, created_at, last_login, activated, roles.*
+	FROM users INNER JOIN roles ON role_id = roles.id
+	WHERE users.id=$1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
 	defer cancel()
 
 	user.Role = &Role{}
 
-	err := m.db.QueryRowContext(ctx, query, value).Scan(
+	err := m.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
 		&user.RoleID,
 		&user.Username,
@@ -99,33 +87,10 @@ WHERE users.%s=$1`, field)
 	return &user, nil
 }
 
-func (m *UserStorage) Insert(ctx context.Context, user *User) error {
-	query := `INSERT INTO users(role_id, username, email, password)
-VALUES($1, $2, $3, $4) RETURNING id, created_at, last_login`
-
-	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
-	defer cancel()
-
-	args := []any{user.RoleID, user.Username, user.Email, user.Password.hash}
-
-	err := m.db.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.LastLogin)
-	if err != nil {
-		var pqErr *pq.Error
-		switch {
-		case errors.As(err, &pqErr) && pqErr.Code == "23505":
-			return ErrConflict
-		default:
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (m *UserStorage) CreateAndInvite(ctx context.Context, token string, user *User) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		// Create new user
-		err := m.Insert(ctx, user)
+		err := m.create(ctx, user)
 		if err != nil {
 			return err
 		}
@@ -140,25 +105,6 @@ func (m *UserStorage) CreateAndInvite(ctx context.Context, token string, user *U
 	})
 }
 
-func (m *UserStorage) update(ctx context.Context, user *User) error {
-	query := `UPDATE users SET activated = $1 WHERE id = $2`
-
-	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
-	defer cancel()
-
-	_, err := m.db.ExecContext(ctx, query, user.Activated, user.ID)
-
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrNotFound
-		default:
-			return err
-		}
-	}
-
-	return nil
-}
 func (m *UserStorage) Delete(ctx context.Context, id int64) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `DELETE FROM users WHERE id = $1`
@@ -166,6 +112,7 @@ func (m *UserStorage) Delete(ctx context.Context, id int64) error {
 		defer cancel()
 
 		_, err := m.db.ExecContext(ctx, query, id)
+		log.Println("error:", err)
 		if err != nil {
 			switch {
 			case errors.Is(err, sql.ErrNoRows):
@@ -202,6 +149,34 @@ func (m *UserStorage) Activate(ctx context.Context, token string) error {
 	})
 }
 
+func (m *UserStorage) Login(ctx context.Context, email, password string) (*User, error) {
+	query := `SELECT id, email, password FROM users WHERE email = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
+	defer cancel()
+
+	var user User
+	user.Role = &Role{}
+
+	err := m.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password.hash)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrUnauthorized
+		default:
+			return nil, err
+		}
+	}
+
+	// Validate password
+	if err = user.Password.Verify(password); err != nil {
+		return nil, ErrUnauthorized
+	}
+
+	return &user, nil
+}
+
 func (p *password) Set(plain string) error {
 	// hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(plain), 10)
@@ -215,8 +190,51 @@ func (p *password) Set(plain string) error {
 	return nil
 }
 
-func (p *password) Verify() error {
-	return bcrypt.CompareHashAndPassword(p.hash, []byte(p.plain))
+func (p *password) Verify(plain string) error {
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(plain))
+}
+
+func (m *UserStorage) create(ctx context.Context, user *User) error {
+	query := `INSERT INTO users(role_id, username, email, password)
+VALUES($1, $2, $3, $4) RETURNING id, created_at, last_login`
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
+	defer cancel()
+
+	args := []any{user.RoleID, user.Username, user.Email, user.Password.hash}
+
+	err := m.db.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.LastLogin)
+	if err != nil {
+		var pqErr *pq.Error
+		switch {
+		case errors.As(err, &pqErr) && pqErr.Code == "23505":
+			return ErrConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *UserStorage) update(ctx context.Context, user *User) error {
+	query := `UPDATE users SET activated = $1 WHERE id = $2`
+
+	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
+	defer cancel()
+
+	_, err := m.db.ExecContext(ctx, query, user.Activated, user.ID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (m *UserStorage) getUserByInvitation(ctx context.Context, token string) (*User, error) {
