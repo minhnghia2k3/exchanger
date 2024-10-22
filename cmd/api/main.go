@@ -6,6 +6,8 @@ import (
 	"github.com/minhnghia2k3/exchanger/internal/mail"
 	"github.com/minhnghia2k3/exchanger/internal/store"
 	"log"
+	"log/slog"
+	"os"
 )
 
 const jsonData = `
@@ -726,12 +728,23 @@ func main() {
 			refreshExpiry: env.GetString("JWT_REFRESH_EXPIRY", "72h")},
 	}
 
+	// Logger
+	opts := PrettyHandlerOptions{
+		options: &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+	}
+	handler := NewPrettyHandler(os.Stdout, opts)
+	logger := slog.New(handler)
+
+	// Database
 	db, err := connectDB(cfg.dbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
+	// Mailer
 	mailer := mail.NewMailer(
 		cfg.mailConfig.sender,
 		cfg.mailConfig.host,
@@ -740,13 +753,16 @@ func main() {
 		cfg.mailConfig.password,
 	)
 
+	// Storage (repository)
 	storage := store.NewStorage(db)
 
 	app := application{
 		config: cfg,
 		store:  storage,
 		mailer: mailer,
+		logger: logger,
 	}
 
+	// Serve application
 	log.Fatal(app.serve())
 }

@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/minhnghia2k3/exchanger/internal/mail"
 	"github.com/minhnghia2k3/exchanger/internal/store"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -13,6 +14,7 @@ type application struct {
 	config config
 	store  *store.Storage
 	mailer *mail.Mailer
+	logger *slog.Logger
 }
 
 type config struct {
@@ -54,6 +56,11 @@ func (app *application) serve() error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("Server listening on port :%d\n", app.config.port)
+	app.logger.LogAttrs(context.Background(),
+		slog.LevelInfo,
+		"Server is running",
+		slog.String("application", "exchanger"),
+		slog.Int("port", app.config.port),
+	)
 	return srv.ListenAndServe()
 }
