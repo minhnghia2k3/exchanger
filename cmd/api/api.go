@@ -24,9 +24,10 @@ type config struct {
 }
 
 type jwtConfig struct {
-	issuer string
-	secret string
-	expiry string
+	issuer        string
+	secret        string
+	expiry        string
+	refreshExpiry string
 }
 
 type dbConfig struct {

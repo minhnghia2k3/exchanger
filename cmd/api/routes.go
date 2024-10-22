@@ -32,6 +32,7 @@ func (app *application) routes() http.Handler {
 		r.Route("/tokens", func(r chi.Router) {
 			r.Post("/authentication", app.createTokenHandler)
 			r.Put("/activate", app.activateTokenHandler)
+			r.Post("/refresh", app.refreshTokenHandler)
 		})
 
 		r.Route("/users", func(r chi.Router) {

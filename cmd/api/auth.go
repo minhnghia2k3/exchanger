@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/minhnghia2k3/exchanger/internal/store"
 	"net/http"
 )
@@ -9,6 +10,11 @@ import (
 type LoginPayload struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8,max=72"`
+}
+
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // Login account
@@ -19,7 +25,7 @@ type LoginPayload struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			input	body		LoginPayload	true	"Login payload"
-//	@Success		201		{object}	envelop
+//	@Success		201		{object}	LoginResponse
 //	@Failure		400		{object}	error
 //	@Failure		401		{object}	error
 //	@Failure		500		{object}	error
@@ -49,13 +55,22 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Generate jwt token
-	tokenString, err := app.generateToken(user.ID, user.Email)
+	accessToken, err := app.generateToken(user)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	if err = app.jsonResponse(w, http.StatusCreated, tokenString); err != nil {
+	refreshToken, err := app.generateRefreshToken(user.ID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err = app.jsonResponse(w, http.StatusCreated, LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
@@ -96,4 +111,72 @@ func (app *application) activateTokenHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type RefreshPayload struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// Refresh token
+//
+//	@Summary		Refresh token
+//	@Description	Refresh access token and refresh token
+//	@Tags			tokens
+//	@Accept			json
+//	@Produce		json
+//	@Param			input	body		RefreshPayload	true	"Refresh token"
+//	@Success		201		{object}	LoginResponse
+//	@Failure		400		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/tokens/refresh [post]
+func (app *application) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var payload RefreshPayload
+
+	if err := app.readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	claims, err := app.verifyToken(payload.RefreshToken)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		app.badRequestResponse(w, r, fmt.Errorf("%w not found userID claims", ErrClaimsMissing))
+		return
+	}
+
+	user, err := app.store.Users.GetByID(r.Context(), int64(userID))
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			app.notFoundResponse(w, r, fmt.Errorf("%w not found user", ErrInvalidJWT))
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	token, err := app.generateToken(user)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	refreshToken, err := app.generateRefreshToken(user.ID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err = app.jsonResponse(w, http.StatusCreated, LoginResponse{
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+	}); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }

@@ -29,6 +29,18 @@ definitions:
     - email
     - password
     type: object
+  main.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  main.RefreshPayload:
+    properties:
+      refresh_token:
+        type: string
+    type: object
   main.RegisterUserPayload:
     properties:
       email:
@@ -75,9 +87,6 @@ definitions:
         type: string
       username:
         type: string
-    type: object
-  main.envelop:
-    additionalProperties: {}
     type: object
   store.Role:
     properties:
@@ -320,7 +329,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/main.envelop'
+            $ref: '#/definitions/main.LoginResponse'
         "400":
           description: Bad Request
           schema: {}
@@ -331,6 +340,37 @@ paths:
           description: Internal Server Error
           schema: {}
       summary: Login user account
+      tags:
+      - tokens
+  /tokens/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token and refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/main.RefreshPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.LoginResponse'
+        "400":
+          description: Bad Request
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      summary: Refresh token
       tags:
       - tokens
   /users:
@@ -400,7 +440,7 @@ paths:
       - application/json
       description: get user by id
       parameters:
-      - description: currency ID
+      - description: user ID
         in: path
         name: userID
         required: true
@@ -414,6 +454,9 @@ paths:
             $ref: '#/definitions/store.User'
         "400":
           description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
           schema: {}
         "404":
           description: Not Found

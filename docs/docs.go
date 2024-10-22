@@ -317,7 +317,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.envelop"
+                            "$ref": "#/definitions/main.LoginResponse"
                         }
                     },
                     "400": {
@@ -326,6 +326,52 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/tokens/refresh": {
+            "post": {
+                "description": "Refresh access token and refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tokens"
+                ],
+                "summary": "Refresh token",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.RefreshPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {}
                     },
                     "500": {
@@ -406,7 +452,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "currency ID",
+                        "description": "user ID",
                         "name": "userID",
                         "in": "path",
                         "required": true
@@ -421,6 +467,10 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {}
                     },
                     "404": {
@@ -518,6 +568,25 @@ const docTemplate = `{
                 }
             }
         },
+        "main.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.RefreshPayload": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "main.RegisterUserPayload": {
             "type": "object",
             "required": [
@@ -586,10 +655,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "main.envelop": {
-            "type": "object",
-            "additionalProperties": {}
         },
         "store.Role": {
             "type": "object",

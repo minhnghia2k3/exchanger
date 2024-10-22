@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/minhnghia2k3/exchanger/internal/store"
 	"net/http"
@@ -73,32 +74,45 @@ func (app *application) validateAccessToken(next http.Handler) http.Handler {
 		requestToken := r.Header.Get("Authorization")
 
 		if requestToken == "" {
-			app.unauthorizedResponse(w, r, errors.New("missing Authorization header"))
+			app.unauthorizedResponse(w, r, ErrMissingJWT)
+			return
+		}
+
+		if !strings.HasPrefix(requestToken, "Bearer ") {
+			app.unauthorizedResponse(w, r, ErrInvalidJWT)
 			return
 		}
 
 		splitToken := strings.Split(requestToken, "Bearer ")
 
 		if len(splitToken) != 2 {
-			app.unauthorizedResponse(w, r, errors.New("invalid token"))
+			app.unauthorizedResponse(w, r, ErrInvalidJWT)
 			return
 		}
 
-		accessToken := splitToken[1]
-
-		claims, err := app.verifyToken(accessToken)
+		claims, err := app.verifyToken(splitToken[1])
 		if err != nil {
 			app.unauthorizedResponse(w, r, err)
 			return
 		}
 
-		expiry, _ := claims.GetExpirationTime()
-		if expiry.Unix() < time.Now().Unix() {
-			app.unauthorizedResponse(w, r, errors.New("token expired"))
+		// Get claims
+		expiry, err := claims.GetExpirationTime()
+		if err != nil {
+			app.unauthorizedResponse(w, r, fmt.Errorf("%w: expiry time", ErrClaimsMissing))
 			return
 		}
 
-		userID := claims["user_id"].(float64)
+		if expiry.Unix() < time.Now().Unix() {
+			app.unauthorizedResponse(w, r, ErrExpiredJWT)
+			return
+		}
+
+		userID, ok := claims["user_id"].(float64)
+		if !ok {
+			app.unauthorizedResponse(w, r, fmt.Errorf("%w: user id", ErrClaimsMissing))
+			return
+		}
 
 		user, err := app.store.Users.GetByID(context.Background(), int64(userID))
 		if err != nil {
@@ -114,5 +128,18 @@ func (app *application) validateAccessToken(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), userCtx, user)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) adminRequired(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		currentUser := r.Context().Value(userCtx).(*store.User)
+
+		if currentUser.Role.Level < 3 {
+			app.forbiddenResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

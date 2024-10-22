@@ -35,7 +35,7 @@ type User struct {
 type Role struct {
 	ID          int64   `json:"id"`
 	RoleName    string  `json:"role_name"`
-	Level       int64   `json:"level"`
+	Level       int     `json:"level"`
 	Description *string `json:"description"`
 }
 
@@ -150,7 +150,9 @@ func (m *UserStorage) Activate(ctx context.Context, token string) error {
 }
 
 func (m *UserStorage) Login(ctx context.Context, email, password string) (*User, error) {
-	query := `SELECT id, email, password FROM users WHERE email = $1`
+	query := `SELECT u.id, email, password, r.role_name, r.level FROM users u
+	INNER JOIN roles r ON r.id = u.role_id
+	WHERE email = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), QueryContextTimeout)
 	defer cancel()
@@ -158,7 +160,13 @@ func (m *UserStorage) Login(ctx context.Context, email, password string) (*User,
 	var user User
 	user.Role = &Role{}
 
-	err := m.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password.hash)
+	err := m.db.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password.hash,
+		&user.Role.RoleName,
+		&user.Role.Level,
+	)
 
 	if err != nil {
 		switch {

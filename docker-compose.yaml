@@ -5,6 +5,9 @@ services:
     build:
       context: .
       target: dev
+    environment:
+      LOG_LEVEL: debug
+      DATABASE_URL: postgres://root:secret@exchanger-db:5432/exchanger?sslmode=disable
     volumes:
       - .:/app
     ports:

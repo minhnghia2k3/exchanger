@@ -720,10 +720,10 @@ func main() {
 			password: env.GetString("MAIL_PASSWORD", ""),
 		},
 		jwtConfig: jwtConfig{
-			issuer: env.GetString("JWT_ISSUER", "Exchanger"),
-			secret: env.GetString("JWT_SECRET", "suP3rS3rcretK4y"),
-			expiry: env.GetString("JWT_EXPIRY", "24h"),
-		},
+			issuer:        env.GetString("JWT_ISSUER", "Exchanger"),
+			secret:        env.GetString("JWT_SECRET", ""),
+			expiry:        env.GetString("JWT_EXPIRY", "15"),
+			refreshExpiry: env.GetString("JWT_REFRESH_EXPIRY", "72h")},
 	}
 
 	db, err := connectDB(cfg.dbConfig)

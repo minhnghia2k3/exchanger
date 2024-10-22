@@ -2,7 +2,8 @@ include .env
 MIGRATION_PATH = "./internal/migrations"
 
 docker.up:
-	@docker-compose up --build -d
+	@docker-compose up -d
+	@docker logs -f exchanger-go
 
 docker.down:
 	@docker-compose down -v

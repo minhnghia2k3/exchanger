@@ -105,10 +105,11 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 //	@Tags			users
 //	@Accept			json
 //	@Produce		json
-//	@Param			userID	path	int	true	"currency ID"
+//	@Param			userID	path	int	true	"user ID"
 //	@Security		ApiKeyAuth
 //	@Success		200	{object}	store.User
 //	@Failure		400	{object}	error
+//	@Failure		401	{object}	error
 //	@Failure		404	{object}	error
 //	@Failure		500	{object}	error
 //	@Router			/users/{userID} [get]
