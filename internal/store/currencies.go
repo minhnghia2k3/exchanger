@@ -9,6 +9,7 @@ import (
 
 type ICurrencies interface {
 	Get(ctx context.Context, id int64) (*Currency, error)
+	GetByCode(ctx context.Context, code string) (*Currency, error)
 	List(ctx context.Context, filter Filter) ([]Currency, Metadata, error)
 	Insert(ctx context.Context, currency *Currency) error
 	Update(ctx context.Context, id int64, currency *Currency) error
@@ -24,6 +25,33 @@ type Currency struct {
 
 type CurrencyStorage struct {
 	db *sql.DB
+}
+
+func (m *CurrencyStorage) GetByCode(ctx context.Context, code string) (*Currency, error) {
+	query := `SELECT id, code, name, symbol_url FROM currencies WHERE code = $1`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryContextTimeout)
+	defer cancel()
+
+	var currency Currency
+
+	err := m.db.QueryRowContext(ctx, query, code).Scan(
+		&currency.ID,
+		&currency.Code,
+		&currency.Name,
+		&currency.SymbolUrl,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, fmt.Errorf("%w by code %s", ErrNotFound, code)
+		default:
+			return nil, err
+		}
+	}
+
+	return &currency, nil
 }
 
 func (m *CurrencyStorage) Get(ctx context.Context, id int64) (*Currency, error) {
@@ -52,6 +80,7 @@ func (m *CurrencyStorage) Get(ctx context.Context, id int64) (*Currency, error) 
 
 	return &currency, nil
 }
+
 func (m *CurrencyStorage) List(ctx context.Context, filter Filter) ([]Currency, Metadata, error) {
 	var currencies []Currency
 	var totalRecord int
@@ -88,6 +117,7 @@ func (m *CurrencyStorage) List(ctx context.Context, filter Filter) ([]Currency, 
 
 	return currencies, metadata, nil
 }
+
 func (m *CurrencyStorage) Insert(ctx context.Context, currency *Currency) error {
 	return withTx(ctx, m.db, func(tx *sql.Tx) error {
 		query := `INSERT INTO currencies(code, name, symbol_url) VALUES($1, $2, $3)`

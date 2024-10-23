@@ -90,7 +90,7 @@ definitions:
     type: object
   store.ExchangeRate:
     properties:
-      base_currency_id:
+      base_code:
         type: string
       id:
         type: integer
@@ -100,7 +100,7 @@ definitions:
         type: string
       rate:
         type: number
-      target_currency_id:
+      target_code:
         type: string
     type: object
   store.Role:
@@ -335,6 +335,90 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get exchange rate
+      tags:
+      - Exchange Rates
+    patch:
+      consumes:
+      - application/json
+      description: update exchange rate conversion
+      parameters:
+      - description: Base currency code
+        in: path
+        name: base
+        required: true
+        type: string
+      - description: Target currency code
+        in: path
+        name: target
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.ExchangeRate'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update exchange rate conversion
+      tags:
+      - Exchange Rates
+    post:
+      consumes:
+      - application/json
+      description: add exchange rate by code
+      parameters:
+      - description: Base currency code
+        in: path
+        name: base
+        required: true
+        type: string
+      - description: Target currency code
+        in: path
+        name: target
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/store.ExchangeRate'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Add exchange rate
       tags:
       - Exchange Rates
   /tokens/activate:

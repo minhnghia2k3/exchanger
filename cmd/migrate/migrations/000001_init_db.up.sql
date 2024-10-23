@@ -35,15 +35,15 @@ CREATE UNIQUE INDEX currencies_code_idx ON currencies (code);
 
 CREATE TABLE IF NOT EXISTS exchange_rates
 (
-    id                 SERIAL PRIMARY KEY NOT NULL,
-    base_currency_id   INT                NOT NULL REFERENCES currencies (id) ON DELETE CASCADE,
-    target_currency_id INT                NOT NULL REFERENCES currencies (id) ON DELETE CASCADE,
-    rate               DECIMAL(18, 8)     NOT NULL,
-    last_update        TIMESTAMP          NOT NULL,
-    next_update        TIMESTAMP          NOT NULL,
+    id          SERIAL PRIMARY KEY NOT NULL,
+    base_code   VARCHAR(3)                NOT NULL REFERENCES currencies (code) ON DELETE CASCADE,
+    target_code VARCHAR(3)                NOT NULL REFERENCES currencies (code) ON DELETE CASCADE,
+    rate        DECIMAL(18, 8)     NOT NULL,
+    last_update TIMESTAMP          NOT NULL,
+    next_update TIMESTAMP          NOT NULL,
 
     -- Unique key pair
-    UNIQUE (base_currency_id, target_currency_id)
+    UNIQUE (base_code, target_code)
 );
 
 CREATE TABLE IF NOT EXISTS transactions

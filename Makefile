@@ -1,5 +1,5 @@
 include .env
-MIGRATION_PATH = "./cmd/migrate/migrations
+MIGRATION_PATH = "./cmd/migrate/migrations"
 
 docker.up:
 	@docker-compose up -d
