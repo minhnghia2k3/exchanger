@@ -57,16 +57,14 @@ func (app *application) routes() http.Handler {
 				r.Delete("/", app.deleteCurrencyHandler)
 			})
 		})
-		//
-		//
-		//r.Route("/rates", func(r chi.Router) {
-		//	r.Route("/{base}/{target}", func(r chi.Router) {
-		//		r.Get("/", app.getExchangeHandler)
-		//		r.Post("/", app.createExchangeHandler)
-		//		r.Patch("/", app.updateExchangeHandler)
-		//		r.Delete("/", app.deleteExchangeHandler)
-		//	})
-		//})
+		r.Route("/rates", func(r chi.Router) {
+			r.Route("/{base}/{target}", func(r chi.Router) {
+				r.Get("/", app.getExchangeRatesHandler)
+				r.Post("/", app.addExchangeRateHandler)
+				r.Patch("/", app.updateExchangeRateHandler)
+				//r.Delete("/", app.deleteExchangeHandler)
+			})
+		})
 		//
 		//r.Route("/exchanges/pair", func(r chi.Router) {
 		//	r.Get("/{base}/{target}", app.exchangePairHanlder)

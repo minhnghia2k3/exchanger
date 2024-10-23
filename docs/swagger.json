@@ -239,6 +239,66 @@
                 }
             }
         },
+        "/rates/{base}/{target}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get exchange rate by code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exchange Rates"
+                ],
+                "summary": "Get exchange rate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Base currency code",
+                        "name": "base",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target currency code",
+                        "name": "target",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/store.ExchangeRate"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {}
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {}
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/tokens/activate": {
             "put": {
                 "description": "Activate user by invitation token",
@@ -645,6 +705,29 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.ExchangeRate": {
+            "type": "object",
+            "properties": {
+                "base_currency_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_update": {
+                    "type": "string"
+                },
+                "next_update": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "target_currency_id": {
                     "type": "string"
                 }
             }

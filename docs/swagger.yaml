@@ -88,6 +88,21 @@ definitions:
       username:
         type: string
     type: object
+  store.ExchangeRate:
+    properties:
+      base_currency_id:
+        type: string
+      id:
+        type: integer
+      last_update:
+        type: string
+      next_update:
+        type: string
+      rate:
+        type: number
+      target_currency_id:
+        type: string
+    type: object
   store.Role:
     properties:
       description:
@@ -282,6 +297,46 @@ paths:
       summary: update currency
       tags:
       - currencies
+  /rates/{base}/{target}:
+    get:
+      consumes:
+      - application/json
+      description: get exchange rate by code
+      parameters:
+      - description: Base currency code
+        in: path
+        name: base
+        required: true
+        type: string
+      - description: Target currency code
+        in: path
+        name: target
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.ExchangeRate'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get exchange rate
+      tags:
+      - Exchange Rates
   /tokens/activate:
     put:
       consumes:
