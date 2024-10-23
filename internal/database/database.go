@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 	"time"
 )
 
-func connectDB(cfg dbConfig) (*sql.DB, error) {
-	pool, err := sql.Open("postgres", cfg.dsn)
+func ConnectDB(dsn string, maxIdleConn, maxOpenConn int, maxIdleTime string) (*sql.DB, error) {
+	pool, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	pool.SetMaxOpenConns(cfg.maxOpenConn)
-	pool.SetMaxIdleConns(cfg.maxIdleConn)
-	duration, err := time.ParseDuration(cfg.maxIdleTime)
+	pool.SetMaxOpenConns(maxIdleConn)
+	pool.SetMaxIdleConns(maxOpenConn)
+
+	duration, err := time.ParseDuration(maxIdleTime)
 	if err != nil {
 		return nil, err
 	}

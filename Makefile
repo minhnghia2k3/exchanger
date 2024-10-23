@@ -1,12 +1,12 @@
 include .env
-MIGRATION_PATH = "./internal/migrations"
+MIGRATION_PATH = "./cmd/migrate/migrations
 
 docker.up:
 	@docker-compose up -d
 	@docker logs -f exchanger-go
 
 docker.down:
-	@docker-compose down -v
+	@docker-compose down
 
 migrate:
 	@migrate create -ext sql -dir $(MIGRATION_PATH) -seq $(NAME)
@@ -24,4 +24,8 @@ migrate.force:
 swag:
 	@swag fmt --exclude docs,scripts && swag init -d ./cmd/api --parseDependency
 
-PHONY: docker.up docker.down migrate migrate.up migrate.down swag
+seed:
+	@go run ./cmd/migrate/seed/
+
+
+PHONY: docker.up docker.down migrate migrate.up migrate.down swag seed

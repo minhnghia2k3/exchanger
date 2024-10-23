@@ -14,7 +14,7 @@ func GetString(key string, fallback string) string {
 }
 
 func GetInt(key string, fallback int) int {
-	val := os.Getenv("key")
+	val := os.Getenv(key)
 	if val == "" {
 		return fallback
 	}

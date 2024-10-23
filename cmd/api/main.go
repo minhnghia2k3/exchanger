@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/joho/godotenv"
+	"github.com/minhnghia2k3/exchanger/internal/database"
 	"github.com/minhnghia2k3/exchanger/internal/env"
 	"github.com/minhnghia2k3/exchanger/internal/mail"
 	"github.com/minhnghia2k3/exchanger/internal/store"
@@ -738,9 +739,15 @@ func main() {
 	logger := slog.New(handler)
 
 	// Database
-	db, err := connectDB(cfg.dbConfig)
+	db, err := database.ConnectDB(
+		cfg.dbConfig.dsn,
+		cfg.dbConfig.maxIdleConn,
+		cfg.dbConfig.maxOpenConn,
+		cfg.dbConfig.maxIdleTime,
+	)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 	defer db.Close()
 
