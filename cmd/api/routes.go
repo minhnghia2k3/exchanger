@@ -65,10 +65,9 @@ func (app *application) routes() http.Handler {
 				//r.Delete("/", app.deleteExchangeHandler)
 			})
 		})
-		//
-		//r.Route("/exchanges/pair", func(r chi.Router) {
-		//	r.Get("/{base}/{target}", app.exchangePairHanlder)
-		//})
+		r.Route("/exchanges/pair", func(r chi.Router) {
+			r.Get("/{base}/{target}/{amount}", app.exchangePairHandler)
+		})
 	})
 
 	return r

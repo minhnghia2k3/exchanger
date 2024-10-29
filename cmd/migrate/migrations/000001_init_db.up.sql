@@ -49,15 +49,14 @@ CREATE TABLE IF NOT EXISTS exchange_rates
 CREATE TABLE IF NOT EXISTS transactions
 (
     id                 SERIAL PRIMARY KEY NOT NULL,
-    user_id            INT                NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    base_currency_id   INT                NOT NULL REFERENCES currencies (id),
-    target_currency_id INT                NOT NULL REFERENCES currencies (id),
-    amount             DECIMAL(18, 8)     NOT NULL,
+    user_id            INT                REFERENCES users (id) ON DELETE CASCADE,
+    base_code   INT                NOT NULL REFERENCES currencies (code),
+    target_code INT                NOT NULL REFERENCES currencies (code),
     converted_amount   DECIMAL(18, 8)     NOT NULL,
     converted_rate     DECIMAL(18, 8)     NOT NULL,
+    result             DECIMAL(18, 8)     NOT NULL,
     created_at         TIMESTAMP default now()
-);
-
+)
 -- Insert data
 INSERT INTO roles(id, role_name, level, description)
 VALUES (1, 'user', 1, 'an user can only perform convert currency');

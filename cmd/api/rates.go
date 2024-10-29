@@ -39,7 +39,7 @@ func (app *application) getExchangeRatesHandler(w http.ResponseWriter, r *http.R
 	target := chi.URLParam(r, "target")
 
 	if !validCurrencyCode(base, target) {
-		app.badRequestResponse(w, r, errors.New("invalid currency code"))
+		app.badRequestResponse(w, r, errInvalidCurrencyCode)
 		return
 	}
 
